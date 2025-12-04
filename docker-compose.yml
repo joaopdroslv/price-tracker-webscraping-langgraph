@@ -1,0 +1,58 @@
+services:
+  playwright-mcp:
+    image: mcr.microsoft.com/playwright/mcp:latest
+    container_name: playwright-mcp
+    init: true
+    restart: unless-stopped
+    ports:
+      - "8931:8931"
+    command:
+      [
+        "--browser", "chromium",
+        # "--headless",
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "--viewport-size", "1280x720",
+        "--ignore-https-errors",
+        "--allowed-hosts", "*",
+        "--port", "8931"
+      ]
+    shm_size: "2gb"
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/backend/app
+    environment:
+      - DB_HOST=mysql-database
+      - DB_PORT=3306
+      - DB_USER=admin
+      - DB_PASSWORD=admin
+      - DB_NAME=main
+    depends_on:
+      - mysql-database
+      - playwright-mcp
+
+  mysql-database:
+    image: mysql:latest
+    container_name: mysql-database
+    environment:
+      MYSQL_ROOT_PASSWORD: admin!
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_DATABASE: main
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # Runs the script that builds the database when the service starts
+      # - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+    restart: always
+
+volumes:
+  mysql-data:
+    # driver: local
