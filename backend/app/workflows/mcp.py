@@ -46,7 +46,7 @@ class PlaywrightMcp:
         """
 
         await client.call_tool("browser_navigate", {"url": url})
-        await client.call_tool("browser_wait_for", {"time", 5})
+        await client.call_tool("browser_wait_for", {"time": 5})
 
     def _extract_text(self, result) -> str:
         """
